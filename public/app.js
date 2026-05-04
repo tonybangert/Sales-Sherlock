@@ -4,6 +4,7 @@
 //   POST /api/research          -> dossier + sources
 //   POST /api/section x 8 (parallel) for sections 1-7 + 9
 //   POST /api/section (psychographic, sequential) with prior_sections
+//   POST /api/section (executive_read, synthesis) with all 9 priors
 //   POST /api/render            -> rendered HTML
 //
 // Each step emits stepper updates so the user sees progress through
@@ -28,7 +29,22 @@ const PRIOR_SECTION_HEADINGS = {
   contact_professional:    "Contact Professional Profile",
   contact_personal:        "Contact Personal and Public Profile",
   hooks_and_risks:         "Conversational Hooks and Risks",
+  psychographic:           "Psychographic and Decision-Making Profile",
 };
+
+// Order in which the nine prior sections are stitched together for the
+// executive_read synthesis call. Mirrors the final brief reading order.
+const EXECUTIVE_READ_PRIOR_ORDER = [
+  "company_overview",
+  "company_history",
+  "investment_ownership",
+  "growth_revenue_signals",
+  "industry_competitive",
+  "contact_professional",
+  "contact_personal",
+  "psychographic",
+  "hooks_and_risks",
+];
 
 const $ = (id) => document.getElementById(id);
 const form          = $("briefForm");
@@ -96,6 +112,7 @@ function buildStepper(useWebSearch) {
     steps.push({ id: "sec-" + id, label: "Writing: " + label });
   }
   steps.push({ id: "sec-psychographic", label: "Synthesizing: Psychographic & decision-making profile" });
+  steps.push({ id: "sec-executive_read", label: "Synthesizing: Executive read (page 1)" });
   steps.push({ id: "render", label: "Rendering brief" });
   for (const s of steps) {
     const el = document.createElement("div");
@@ -234,6 +251,27 @@ form.addEventListener("submit", async (e) => {
     });
     setStep("sec-psychographic", "done");
     sections.psychographic = psy.body;
+
+    // Executive read: synthesizes all nine prior sections into the
+    // page-one card (quick stats, three priorities, entry hypothesis,
+    // three high-leverage questions). Best-effort: a failure here
+    // shouldn't kill the brief, just thin out page 1.
+    setStep("sec-executive_read", "run");
+    const execPriorParts = EXECUTIVE_READ_PRIOR_ORDER
+      .filter((sid) => sections[sid])
+      .map((sid) => `### ${PRIOR_SECTION_HEADINGS[sid]}\n\n${sections[sid]}`);
+    try {
+      const execRead = await postJSON("/api/section", {
+        section_id: "executive_read",
+        dossier,
+        prior_sections: execPriorParts.join("\n\n"),
+      });
+      sections.executive_read = execRead.body;
+      setStep("sec-executive_read", "done");
+    } catch (err) {
+      console.warn("Executive read failed; continuing without it.", err);
+      setStep("sec-executive_read", "err");
+    }
 
     setStep("render", "run");
     const [htmlR, mdR] = await Promise.all([

@@ -1,8 +1,10 @@
 """POST /api/section — generate one brief section against a dossier.
 
 The frontend fans out 8 parallel calls for sections 1-7 and 9, then
-makes one sequential call for section 8 (psychographic) with the prior
-section bodies passed in via `prior_sections`.
+makes one sequential call for section 8 (psychographic) with the
+parallel section bodies as prior_sections, then one final synthesis
+call for executive_read with all nine prior bodies. Each call accepts
+any registered section_id; routing happens via the prompt loader.
 
 Each call is ~10-20s. Comfortable inside Vercel's 60s Hobby cap.
 """

@@ -22,11 +22,12 @@ from sherlock.researcher import generate_brief
 from sherlock.sources.apollo import enrich_with_apollo
 from sherlock.sources.linkedin import parse_linkedin_paste
 from sherlock.sources.web import fetch_company_summary
+from sherlock.validation import DEFAULT_MIN_PASTE_CHARS, check_linkedin_paste
 
 load_dotenv()
 
 app = typer.Typer(
-    help="Sherlock — pre-call research briefs for revenue teams.",
+    help="Sherlock - pre-call research briefs for revenue teams.",
     add_completion=False,
     no_args_is_help=True,
 )
@@ -50,7 +51,7 @@ def _main(
         help="Show version and exit.",
     ),
 ) -> None:
-    """Sherlock — pre-call research briefs for revenue teams."""
+    """Sherlock - pre-call research briefs for revenue teams."""
 
 
 @app.command("brief")
@@ -78,6 +79,12 @@ def brief(
         "-x",
         help="Meeting context (e.g. '30-min discovery call about pricing').",
     ),
+    positioning: Optional[str] = typer.Option(
+        None,
+        "--positioning",
+        "-p",
+        help="Your own positioning - what you sell, advise on, or want to discuss. Used to flag rapport hooks.",
+    ),
     output: Path = typer.Option(
         Path("brief.md"),
         "--out",
@@ -94,6 +101,17 @@ def brief(
         False,
         "--no-apollo",
         help="Skip Apollo enrichment even if APOLLO_API_KEY is set.",
+    ),
+    no_web_search: bool = typer.Option(
+        False,
+        "--no-web-search",
+        help="Skip the web research stage. Brief will be sourced only from the LinkedIn paste and the company website.",
+    ),
+    min_paste_chars: int = typer.Option(
+        DEFAULT_MIN_PASTE_CHARS,
+        "--min-paste-chars",
+        "-M",
+        help="Minimum LinkedIn paste size. Below this, Sherlock refuses rather than producing a thin brief.",
     ),
     interactive: bool = typer.Option(
         False,
@@ -127,8 +145,16 @@ def brief(
     else:
         linkedin_text = ""
 
-    if not linkedin_text.strip():
-        console.print("[red]No LinkedIn paste provided.[/red]")
+    # --- Paste density gate ---
+    paste_check = check_linkedin_paste(linkedin_text, min_chars=min_paste_chars)
+    if not paste_check.ok:
+        console.print(
+            Panel.fit(
+                f"[red]{paste_check.reason}[/red]",
+                title="Paste too thin",
+                border_style="red",
+            )
+        )
         raise typer.Exit(1)
 
     # --- Resolve company ---
@@ -142,12 +168,25 @@ def brief(
             default="Discovery call",
         )
 
+    # --- Resolve positioning (optional) ---
+    if not positioning and interactive:
+        positioning = typer.prompt(
+            "Your own positioning (what you sell or advise on, leave blank to skip)",
+            default="",
+            show_default=False,
+        ) or None
+
+    # --- Honor --no-web-search via env so the researcher sees it ---
+    if no_web_search:
+        os.environ["SHERLOCK_NO_WEB_SEARCH"] = "1"
+
     # --- Run pipeline ---
     asyncio.run(
         _run(
             linkedin_text=linkedin_text,
             company=company,
             context=context,
+            positioning=positioning,
             output=output,
             model=model,
             use_apollo=not no_apollo,
@@ -159,6 +198,7 @@ async def _run(
     linkedin_text: str,
     company: str,
     context: str,
+    positioning: Optional[str],
     output: Path,
     model: Optional[str],
     use_apollo: bool,
@@ -193,10 +233,13 @@ async def _run(
             linkedin=linkedin,
             company=company_summary,
             context=context,
+            positioning=positioning,
             apollo=apollo,
         )
 
-        t4 = progress.add_task("Generating brief sections (parallel)...", total=None)
+        t4 = progress.add_task("Researching across web sources...", total=None)
+        # The researcher does both stages internally; the writing stage is the
+        # heavier one, but the user perceives the whole pipeline as one step.
         sections = await generate_brief(dossier, model=model)
         progress.update(t4, completed=1)
 
@@ -211,7 +254,8 @@ async def _run(
     console.print(
         Panel.fit(
             f"[green]Brief saved to[/green] [bold]{output}[/bold]\n\n"
-            "[dim]Open it, share it, post it.[/dim]",
+            f"[dim]{len(dossier.sources)} sources gathered. "
+            "Open it, share it, post it.[/dim]",
             title="Done",
             border_style="green",
         )

@@ -14,13 +14,15 @@ import os
 from pathlib import Path
 
 PROMPT_FILES: dict[str, str] = {
-    "tldr": "01_tldr.md",
-    "company_snapshot": "02_company_snapshot.md",
-    "person_role": "03_person_role.md",
-    "three_things": "04_three_things.md",
-    "opening_questions": "05_opening_questions.md",
-    "discovery_questions": "06_discovery_questions.md",
-    "risk_flag": "07_risk_flag.md",
+    "company_overview": "01_company_overview.md",
+    "company_history": "02_company_history.md",
+    "investment_ownership": "03_investment_ownership.md",
+    "growth_revenue_signals": "04_growth_revenue_signals.md",
+    "industry_competitive": "05_industry_competitive.md",
+    "contact_professional": "06_contact_professional.md",
+    "contact_personal": "07_contact_personal.md",
+    "psychographic": "08_psychographic.md",
+    "hooks_and_risks": "09_hooks_and_risks.md",
 }
 
 _BUNDLED_DIR = Path(__file__).parent

@@ -49,10 +49,10 @@ The opening questions in `05_opening_questions.md` are calibrated for a thoughtf
 The most powerful customization is adding a short framing block at the top of every prompt that describes who *you* sell, what value prop you lead with, and what your typical deal looks like. Then every brief section is generated with that context in mind. Example header to add to all seven prompts:
 
 ```
-You are preparing material for a seller from PerformanceLabs.AI, which builds
-AI tools for revenue teams. Their typical engagement is a 4-6 week deployment
-of a custom AI workflow inside the customer's RevOps stack, priced $25-75K.
-They sell to VP RevOps, CROs, and Heads of Sales Operations.
+You are preparing material for a seller at Acme RevOps, which sells a
+revenue-intelligence platform to mid-market SaaS companies. Their typical
+deal is a 12-month annual contract priced $40-120K, sold to VP Sales,
+CROs, and Heads of RevOps.
 
 Below is the research dossier:
 

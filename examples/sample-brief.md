@@ -108,7 +108,3 @@ Acme appears to sit as a challenger in the enablement-and-RevOps overlap, not th
 - **S8** [interviews] SaaStr Podcast Episode 612: Jane Doe on RevOps from Scratch - <https://www.saastr.com/podcast/jane-doe-revops>
 - **S9** [interviews] Pavilion Live Talk: Outcomes-Based Compensation - <https://www.joinpavilion.com/talks/jane-doe-comp>
 - **LinkedIn paste** [linkedin_paste] Pasted by user (not retransmitted)
-
----
-
-*Built on [Claude](https://anthropic.com) by [PerformanceLabs.AI](https://performancelabs.ai). Want help rolling tools like this out across your revenue stack? [Let's talk](https://performancelabs.ai).*

@@ -70,13 +70,4 @@ def render_markdown(sections: dict[str, str], dossier: Dossier) -> str:
         out.append("- **LinkedIn paste** [linkedin_paste] Pasted by user (not retransmitted)")
         out.append("")
 
-    out.append("---")
-    out.append("")
-    out.append(
-        "*Built on [Claude](https://anthropic.com) by "
-        "[PerformanceLabs.AI](https://performancelabs.ai). "
-        "Want help rolling tools like this out across your revenue stack? "
-        "[Let's talk](https://performancelabs.ai).*"
-    )
-
     return "\n".join(out)

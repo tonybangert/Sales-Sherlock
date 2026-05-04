@@ -60,7 +60,6 @@ sherlock = "sherlock.cli:app"
 [project.urls]
 Homepage = "https://github.com/tonybangert/sherlock"
 Issues = "https://github.com/tonybangert/sherlock/issues"
-"PerformanceLabs.AI" = "https://performancelabs.ai"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/sherlock"]

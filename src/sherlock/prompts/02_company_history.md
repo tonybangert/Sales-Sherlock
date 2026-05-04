@@ -20,6 +20,10 @@ Required elements:
 - Major inflection points: pivots, acquisitions, leadership changes, significant product launches
 - Anything that shapes how the company thinks about risk, growth, or partnerships today
 
+## Length
+
+Target 80 to 110 words. The brief renders to a designed two-page deliverable. Cut padding before facts.
+
 ## Hard formatting rules
 
 - No em-dashes. No emojis.

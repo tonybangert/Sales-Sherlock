@@ -23,6 +23,10 @@ Cover:
 
 For each item, name the underlying signal in one phrase, then state what it implies for the meeting. Implications go in `[Inferred]`.
 
+## Length
+
+Target 100 to 140 words. The brief renders to a designed two-page deliverable. Cut padding before facts.
+
 ## Hard formatting rules
 
 - No em-dashes. No emojis.

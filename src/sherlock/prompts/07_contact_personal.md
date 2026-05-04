@@ -21,6 +21,10 @@ Cover:
 - **Causes they support**: nonprofit board seats, advocacy, charitable work
 - **Personal background details they have made public**: family if they post about it, hometown, alma mater pride, military service
 
+## Length
+
+Target 40 to 70 words. The brief renders to a designed two-page deliverable. Cut padding before facts.
+
 ## Hard formatting rules
 
 - No em-dashes. No emojis.

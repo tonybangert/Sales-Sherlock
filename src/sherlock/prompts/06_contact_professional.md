@@ -26,6 +26,10 @@ Cover:
 
 If the user supplied positioning (their own background or what they sell, in `<user_positioning>`), call out any **shared experience** between the user and the contact: industry, function, geography, alma mater. Flag those as **rapport hooks** in a final short paragraph at the end of this section.
 
+## Length
+
+Target 110 to 150 words. The brief renders to a designed two-page deliverable. Cut padding before facts.
+
 ## Hard formatting rules
 
 - No em-dashes. No emojis.

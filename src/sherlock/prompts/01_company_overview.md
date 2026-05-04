@@ -21,6 +21,10 @@ Write 3 to 5 sentences covering:
 - Headquarters location
 - Current stage (early startup, growth, mature, in-turnaround, etc.)
 
+## Length
+
+Target 60 to 90 words. The brief renders to a designed two-page deliverable. Cut padding before facts.
+
 ## Hard formatting rules
 
 - No em-dashes. Use commas, periods, or restructure.

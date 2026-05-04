@@ -26,6 +26,10 @@ Two to four items. Recent layoffs, controversies, stalled initiatives, public st
 
 Three to five things the public record and the LinkedIn paste do not answer that the user should try to learn live. These are the questions whose answers would change the deal strategy.
 
+## Length
+
+Target 150 to 200 words across the three subsections. The brief renders to a designed two-page deliverable. Cut padding before facts.
+
 ## Hard formatting rules
 
 - No em-dashes. No emojis.

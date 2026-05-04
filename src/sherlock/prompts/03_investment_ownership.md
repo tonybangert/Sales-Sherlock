@@ -24,6 +24,10 @@ Cover:
 
 End with one sentence that translates the ownership structure into a buying-style implication. Tag that sentence `[Inferred]`.
 
+## Length
+
+Target 80 to 110 words. The brief renders to a designed two-page deliverable. Cut padding before facts.
+
 ## Hard formatting rules
 
 - No em-dashes. No emojis.

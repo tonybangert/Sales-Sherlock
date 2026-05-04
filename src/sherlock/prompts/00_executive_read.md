@@ -51,6 +51,10 @@ Three numbered questions whose answers would meaningfully change the seller's st
 2. [Question]
 3. [Question]
 
+## Length
+
+Target 200 to 280 words across all four blocks. This block anchors page one of a designed two-page deliverable. Cut padding before facts.
+
 ## Hard formatting rules
 
 - No em-dashes. No emojis.

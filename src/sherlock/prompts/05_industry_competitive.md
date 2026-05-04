@@ -21,6 +21,10 @@ Cover:
 - **Where this company sits**: leader, challenger, niche, laggard
 - **Industry-level pressures**: regulatory, technological, economic — only ones relevant to the call
 
+## Length
+
+Target 90 to 120 words. The brief renders to a designed two-page deliverable. Cut padding before facts.
+
 ## Hard formatting rules
 
 - No em-dashes. No emojis.

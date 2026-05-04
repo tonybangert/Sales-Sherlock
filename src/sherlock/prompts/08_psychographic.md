@@ -61,6 +61,10 @@ The way someone writes their own About section is one of the cleanest signals av
 
 State which pattern this contact fits and what it implies for the call.
 
+## Length
+
+Target 180 to 230 words. This is the section that earns the most page space; it is also the one most prone to padding. Cut adjective stacks before facts.
+
 ## Hard formatting rules
 
 - No em-dashes. No emojis.

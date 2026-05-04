@@ -1,0 +1,44 @@
+Jane Doe
+VP, Revenue Operations at Acme Corporation | ex-HubSpot, ex-Stripe
+Denver, Colorado, United States
+500+ connections
+
+About
+Operations leader with 8+ years scaling go-to-market functions at high-growth SaaS companies. Currently building the RevOps function at Acme — comp design, sales enablement, revenue analytics, and the boring infrastructure that makes the rest possible. Previously led mid-market sales ops at HubSpot and started in finance at Stripe. I care a lot about data quality, fair comp, and giving AEs the tools to actually do their jobs.
+
+Experience
+VP, Revenue Operations
+Acme Corporation · Full-time
+Sep 2025 - Present · 8 mos
+Denver, Colorado, United States · Hybrid
+Building the RevOps function from the comp plan up. Team of 9.
+
+Director, Sales Operations - Mid-Market
+HubSpot · Full-time
+Mar 2021 - Aug 2025 · 4 yrs 6 mos
+Cambridge, Massachusetts, United States
+Led sales operations for the mid-market segment. Owned territory design, quota setting, and rep performance analytics for a 200-AE team.
+
+Senior Financial Analyst
+Stripe · Full-time
+Jul 2019 - Feb 2021 · 1 yr 8 mos
+San Francisco Bay Area
+Finance partner to the GTM organization.
+
+Education
+Northwestern University - Kellogg School of Management
+MBA · 2017 - 2019
+
+University of Michigan
+BBA, Finance · 2011 - 2015
+
+Skills
+Revenue Operations · Sales Operations · Compensation Design · Salesforce · HubSpot · Looker · SQL · Financial Modeling · Forecasting · Cross-functional Leadership
+
+Activity
+1,200 followers
+Jane posted this · 2 weeks ago
+"Spent the morning debugging why our new outcomes-based comp plan was producing weird payouts in the back half of Q1. Spoiler: the data quality problems we thought were edge cases are not edge cases. Lesson — don't roll out new comp without first auditing the source-of-truth fields you're going to pay people on."
+
+Jane posted this · 1 month ago
+"Hiring a Director of Enablement to round out the team. If you've built enablement from scratch at a Series B/C SaaS company and have opinions about scaling without bloating, send me a note."

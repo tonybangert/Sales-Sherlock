@@ -25,4 +25,4 @@ async def find_funding(
         f"or received, and any recent SEC filings if public. Cite Crunchbase, "
         f"PitchBook, SEC, or reputable news where possible."
     )
-    return await web_search(client, topic, max_uses=4)
+    return await web_search(client, topic, max_uses=2)

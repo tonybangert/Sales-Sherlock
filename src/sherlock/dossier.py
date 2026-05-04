@@ -16,7 +16,7 @@ resolve for the reader.
 from __future__ import annotations
 
 import json
-from dataclasses import dataclass, field
+from dataclasses import asdict, dataclass, field
 from datetime import datetime
 from typing import Any, Optional
 
@@ -170,3 +170,25 @@ class Dossier:
 
         parts.append("</research>")
         return "\n".join(parts)
+
+
+def dossier_to_dict(dossier: Dossier) -> dict:
+    """Serialize a Dossier to a JSON-safe dict for wire transport."""
+    return asdict(dossier)
+
+
+def dossier_from_dict(data: dict) -> Dossier:
+    """Reconstruct a Dossier from the dict produced by dossier_to_dict."""
+    linkedin = LinkedInProfile(**data["linkedin"])
+    company = CompanySummary(**data["company"])
+    apollo_data = data.get("apollo")
+    apollo = ApolloEnrichment(**apollo_data) if apollo_data else None
+    sources = [Source(**s) for s in data.get("sources", [])]
+    return Dossier(
+        linkedin=linkedin,
+        company=company,
+        context=data["context"],
+        positioning=data.get("positioning"),
+        apollo=apollo,
+        sources=sources,
+    )

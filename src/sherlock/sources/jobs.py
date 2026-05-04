@@ -20,4 +20,4 @@ async def find_jobs(
         f"any senior or executive roles that suggest a new function being "
         f"built or an existing leader being replaced."
     )
-    return await web_search(client, topic, max_uses=3)
+    return await web_search(client, topic, max_uses=2)

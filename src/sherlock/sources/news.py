@@ -18,4 +18,4 @@ async def find_news(
         f"product launches, layoffs, expansions, controversies, partnerships. "
         f"Skip blog posts written by the company itself."
     )
-    return await web_search(client, topic, max_uses=4)
+    return await web_search(client, topic, max_uses=2)

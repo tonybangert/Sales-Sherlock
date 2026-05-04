@@ -79,25 +79,24 @@ async def run_research_stage(
     company = dossier.company.url
     name = dossier.linkedin.name or ""
 
-    coros = [
-        find_news(client, company),
-        find_funding(client, company),
-        find_jobs(client, company),
-        find_linkedin_company(client, company),
+    # Sequential rather than parallel: web_search tool_result blocks
+    # can be 5-10K input tokens each, and parallel queries blow past
+    # the per-minute token cap on developer-tier Anthropic accounts.
+    queries = [
+        ("news", lambda: find_news(client, company)),
+        ("funding", lambda: find_funding(client, company)),
+        ("jobs", lambda: find_jobs(client, company)),
+        ("linkedin_company", lambda: find_linkedin_company(client, company)),
     ]
     if name:
-        coros.append(find_interviews(client, name, company))
+        queries.append(("interviews", lambda: find_interviews(client, name, company)))
 
-    results = await asyncio.gather(*coros, return_exceptions=True)
-
-    kinds = ["news", "funding", "jobs", "linkedin_company"]
-    if name:
-        kinds.append("interviews")
-
-    for kind, result in zip(kinds, results):
-        if isinstance(result, Exception):
+    for kind, runner in queries:
+        try:
+            result = await runner()
+        except Exception:  # noqa: BLE001
             continue
-        for hit in result:
+        for hit in result or []:
             if not isinstance(hit, WebHit):
                 continue
             dossier.add_source(
@@ -106,6 +105,52 @@ async def run_research_stage(
                 title=hit.title,
                 content=hit.summary,
             )
+
+
+async def generate_section(
+    dossier: Dossier,
+    section_id: str,
+    prior_sections: str = "",
+    model: Optional[str] = None,
+    client: Optional[AsyncAnthropic] = None,
+) -> tuple[str, bool]:
+    """Generate a single brief section.
+
+    Used by the web frontend, which fans out one HTTP request per section
+    to stay under Vercel's 60s function cap. The CLI continues to use
+    generate_brief() which orchestrates internally.
+
+    Returns (body, repaired) where `repaired` is True if the validator
+    triggered a one-shot repair pass.
+    """
+    model = model or os.getenv("SHERLOCK_MODEL", DEFAULT_MODEL)
+    max_tokens = int(os.getenv("SHERLOCK_MAX_TOKENS", str(DEFAULT_MAX_TOKENS)))
+
+    own_client = client is None
+    if own_client:
+        client = AsyncAnthropic()
+
+    prompts = load_prompts()
+    template = prompts.get(section_id)
+    if template is None:
+        return f"_(missing prompt template for `{section_id}`)_", False
+
+    prompt = (
+        template.replace("{{sources}}", dossier.to_sources_index())
+        .replace("{{research}}", dossier.to_research_block())
+        .replace("{{prior_sections}}", prior_sections)
+    )
+
+    text = await _call_claude(client, model, max_tokens, prompt)
+
+    repaired = False
+    if needs_repair(text, section_id):
+        text = await _repair_section(
+            client, model, max_tokens, prompt, text, section_id
+        )
+        repaired = True
+
+    return text, repaired
 
 
 async def generate_brief(

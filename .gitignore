@@ -44,3 +44,5 @@ briefs/
 
 # Local prompt overrides
 .sherlock/
+
+.vercel

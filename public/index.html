@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sales Sherlock — Pre-call research briefs</title>
+<style>
+  :root {
+    --brand: #0B1F3A;
+    --brand-2: #C9A45A;
+    --ink: #1A1A1A;
+    --muted: #6B6B6B;
+    --paper: #F8F5EE;
+    --paper-edge: #ECE6D5;
+    --page: #2A2520;
+    --rule: #DCD5C6;
+    --accent-soft: rgba(201,164,90,0.18);
+    --ok: #2F5E2A;
+    --warn: #7A5314;
+    --err: #8B2424;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    background: var(--page);
+    color: var(--ink);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Inter, system-ui, sans-serif;
+    line-height: 1.55;
+    padding: 36px 16px 64px;
+    min-height: 100vh;
+  }
+  .paper {
+    max-width: 880px;
+    margin: 0 auto;
+    background: var(--paper);
+    border: 1px solid var(--paper-edge);
+    border-radius: 4px;
+    box-shadow:
+      0 1px 0 rgba(255,255,255,0.04) inset,
+      0 30px 60px -20px rgba(0,0,0,0.55),
+      0 8px 18px rgba(0,0,0,0.35);
+    overflow: hidden;
+  }
+  .brand-band {
+    background: linear-gradient(180deg, var(--brand) 0%, #08172B 100%);
+    color: #F1ECDB;
+    padding: 28px 56px 22px;
+    border-bottom: 2px solid var(--brand-2);
+    position: relative;
+  }
+  .brand-band::after {
+    content: ""; position: absolute; left: 0; right: 0; bottom: -2px;
+    height: 2px;
+    background: linear-gradient(90deg,
+      var(--brand-2) 0%, rgba(201,164,90,0.55) 60%, rgba(201,164,90,0) 100%);
+  }
+  .wordmark {
+    display: flex; align-items: center; gap: 14px;
+    font-family: ui-serif, "Iowan Old Style", Baskerville, Georgia, serif;
+    font-size: 34px; font-weight: 600; letter-spacing: 0.01em;
+    line-height: 1; margin: 0;
+  }
+  .wordmark .word {
+    background: linear-gradient(180deg, #FBF6E5 0%, #E6D9B4 100%);
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+  }
+  .magnifier {
+    width: 38px; height: 38px; flex-shrink: 0;
+    filter: drop-shadow(0 1px 1px rgba(0,0,0,0.45));
+  }
+  .brand-tagline {
+    margin-top: 6px;
+    color: rgba(241, 236, 219, 0.65);
+    font-size: 12px; letter-spacing: 0.14em; text-transform: uppercase;
+    font-weight: 500;
+  }
+
+  .doc { padding: 36px 56px 48px; }
+
+  .lede {
+    font-family: ui-serif, "Iowan Old Style", Georgia, serif;
+    font-size: 17px; color: var(--ink); margin: 0 0 20px;
+  }
+  .lede em { color: var(--muted); font-style: italic; }
+
+  form { display: grid; gap: 18px; }
+  .row { display: grid; gap: 6px; }
+  .row label {
+    font-size: 11.5px; font-weight: 700; text-transform: uppercase;
+    letter-spacing: 0.08em; color: var(--brand);
+  }
+  .row .hint { font-size: 12px; color: var(--muted); }
+
+  input[type=text], textarea {
+    font: inherit;
+    font-size: 14.5px;
+    color: var(--ink);
+    background: #FFF;
+    border: 1px solid var(--rule);
+    border-radius: 3px;
+    padding: 10px 12px;
+    width: 100%;
+    transition: border-color 120ms;
+  }
+  input[type=text]:focus, textarea:focus {
+    outline: none;
+    border-color: var(--brand-2);
+    box-shadow: 0 0 0 3px var(--accent-soft);
+  }
+  textarea {
+    min-height: 220px;
+    font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+    font-size: 12.5px;
+    line-height: 1.5;
+    resize: vertical;
+  }
+  .charcount {
+    font-family: ui-monospace, monospace;
+    font-size: 11.5px;
+    color: var(--muted);
+    text-align: right;
+    margin-top: 2px;
+  }
+  .charcount.warn { color: var(--err); font-weight: 600; }
+
+  .row-pair { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+  @media (max-width: 600px) { .row-pair { grid-template-columns: 1fr; } }
+
+  .toggles { display: flex; gap: 24px; flex-wrap: wrap; }
+  .toggle { display: flex; align-items: center; gap: 8px; font-size: 14px; }
+  .toggle input { accent-color: var(--brand-2); }
+
+  button.primary {
+    background: var(--brand);
+    color: #F1ECDB;
+    border: 1px solid var(--brand);
+    padding: 12px 22px;
+    font: inherit; font-weight: 600;
+    font-size: 14.5px; letter-spacing: 0.02em;
+    border-radius: 3px;
+    cursor: pointer;
+    transition: background 150ms, transform 80ms;
+  }
+  button.primary:hover { background: #112a4d; }
+  button.primary:active { transform: translateY(1px); }
+  button.primary:disabled {
+    background: #45525E; border-color: #45525E; cursor: not-allowed;
+  }
+
+  /* ===== Progress stepper ===== */
+  .progress {
+    margin: 28px 0 0;
+    border: 1px solid var(--rule);
+    border-radius: 3px;
+    background: #FFFDF7;
+    padding: 18px 22px;
+    display: none;
+  }
+  .progress.active { display: block; }
+  .progress h3 {
+    margin: 0 0 12px; font-size: 12px;
+    text-transform: uppercase; letter-spacing: 0.08em; color: var(--brand);
+    font-weight: 700;
+  }
+  .step {
+    display: flex; align-items: center; gap: 10px;
+    font-size: 13.5px; padding: 4px 0;
+    color: var(--muted);
+  }
+  .step .dot {
+    width: 12px; height: 12px; border-radius: 50%;
+    background: var(--rule); border: 1px solid var(--rule);
+    flex-shrink: 0;
+  }
+  .step.run .dot {
+    background: var(--brand-2);
+    box-shadow: 0 0 0 4px var(--accent-soft);
+    animation: pulse 1.2s infinite;
+  }
+  .step.done { color: var(--ink); }
+  .step.done .dot { background: var(--ok); border-color: var(--ok); }
+  .step.err { color: var(--err); }
+  .step.err .dot { background: var(--err); border-color: var(--err); }
+  @keyframes pulse {
+    0%, 100% { box-shadow: 0 0 0 4px var(--accent-soft); }
+    50% { box-shadow: 0 0 0 7px rgba(201,164,90,0.30); }
+  }
+
+  /* ===== Result pane ===== */
+  .result {
+    margin-top: 28px;
+    display: none;
+  }
+  .result.active { display: block; }
+  .result-actions {
+    display: flex; gap: 10px; margin-bottom: 12px; flex-wrap: wrap;
+  }
+  .result-actions button {
+    background: #FFF;
+    border: 1px solid var(--rule);
+    padding: 8px 14px;
+    font: inherit; font-size: 13px; font-weight: 600;
+    color: var(--brand);
+    border-radius: 3px;
+    cursor: pointer;
+  }
+  .result-actions button:hover { background: var(--accent-soft); border-color: var(--brand-2); }
+  iframe.brief-frame {
+    width: 100%;
+    min-height: 1200px;
+    border: 1px solid var(--rule);
+    border-radius: 3px;
+    background: var(--paper);
+  }
+
+  .alert {
+    margin-top: 16px; padding: 12px 16px;
+    border-radius: 3px; font-size: 14px;
+    border: 1px solid;
+    display: none;
+  }
+  .alert.active { display: block; }
+  .alert.err { background: #FBE9E9; border-color: #E5C0C0; color: var(--err); }
+  .alert.warn { background: #FCF1D7; border-color: #E8D5A8; color: var(--warn); }
+
+  .footer-band {
+    margin-top: 42px; padding: 22px 56px;
+    background: var(--brand);
+    color: rgba(241, 236, 219, 0.78);
+    font-size: 12.5px; letter-spacing: 0.02em; text-align: center;
+    border-top: 2px solid var(--brand-2);
+  }
+  .footer-band a { color: var(--brand-2); text-decoration: none; font-weight: 600; }
+  .footer-band a:hover { text-decoration: underline; }
+
+  .key-status {
+    display: inline-block; margin-left: 10px;
+    padding: 1px 8px; border-radius: 999px;
+    font-size: 10.5px; font-weight: 700; letter-spacing: 0.04em;
+    background: rgba(47,94,42,0.18); color: #6BD0A4;
+  }
+  .key-status.missing {
+    background: rgba(139,36,36,0.20); color: #FFB1B1;
+  }
+</style>
+</head>
+<body>
+  <main class="paper">
+    <div class="brand-band">
+      <h1 class="wordmark">
+        <span class="word">Sales Sherlock</span>
+        <svg class="magnifier" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          <g transform="rotate(-22 32 32)">
+            <circle cx="26" cy="26" r="16"
+                    fill="rgba(201,164,90,0.10)"
+                    stroke="var(--brand-2)" stroke-width="3.5"/>
+            <path d="M21 17 a13 13 0 0 0 -7 11"
+                  stroke="rgba(255,255,255,0.55)" stroke-width="2"
+                  stroke-linecap="round" fill="none"/>
+            <line x1="38" y1="38" x2="55" y2="55"
+                  stroke="var(--brand-2)" stroke-width="6" stroke-linecap="round"/>
+            <line x1="38" y1="38" x2="55" y2="55"
+                  stroke="rgba(255,255,255,0.25)" stroke-width="2" stroke-linecap="round"/>
+          </g>
+        </svg>
+      </h1>
+      <div class="brand-tagline">
+        A PerformanceLabs.AI pre-call research tool
+        <span id="keyStatus" class="key-status">checking...</span>
+      </div>
+    </div>
+
+    <div class="doc">
+      <p class="lede">
+        Paste a LinkedIn profile, drop in a company URL, and Sherlock builds a
+        nine-section, source-tagged pre-call brief in roughly 60 seconds.
+        <em>Every factual claim ends with a confidence tag.</em>
+      </p>
+
+      <form id="briefForm">
+        <div class="row">
+          <label for="linkedin">LinkedIn profile paste</label>
+          <span class="hint">
+            Open the contact's LinkedIn profile in your browser, press
+            Ctrl/Cmd+A then Ctrl/Cmd+C, and paste here. Include About,
+            Experience, Education, and recent posts. Paste generously,
+            the brief quality is bounded by the paste quality.
+          </span>
+          <textarea id="linkedin" name="linkedin_text" required
+            placeholder="Paste the full LinkedIn profile text here..."></textarea>
+          <div id="charcount" class="charcount">0 chars (need at least 800)</div>
+        </div>
+
+        <div class="row-pair">
+          <div class="row">
+            <label for="company">Company URL or domain</label>
+            <input type="text" id="company" name="company" required
+              placeholder="acme.com">
+          </div>
+          <div class="row">
+            <label for="context">Meeting context</label>
+            <input type="text" id="context" name="context"
+              placeholder="30-min discovery call about scaling AE onboarding"
+              value="Discovery call">
+          </div>
+        </div>
+
+        <div class="row">
+          <label for="positioning">Your positioning <span style="color:var(--muted);font-weight:500;text-transform:none;letter-spacing:0;">(optional)</span></label>
+          <span class="hint">
+            What you sell or advise on. Sherlock uses this to flag rapport
+            hooks based on shared background.
+          </span>
+          <input type="text" id="positioning" name="positioning"
+            placeholder="Sales enablement platform that compresses AE ramp time">
+        </div>
+
+        <div class="toggles">
+          <label class="toggle">
+            <input type="checkbox" id="webSearch" checked>
+            Use web research
+          </label>
+          <label class="toggle" id="apolloToggleWrap" style="display:none;">
+            <input type="checkbox" id="apollo" checked>
+            Use Apollo enrichment
+          </label>
+        </div>
+
+        <div>
+          <button type="submit" class="primary" id="generate">
+            Generate brief
+          </button>
+        </div>
+
+        <div id="alert" class="alert err"></div>
+      </form>
+
+      <section class="progress" id="progress">
+        <h3>Generating brief</h3>
+        <div id="steps"></div>
+      </section>
+
+      <section class="result" id="result">
+        <div class="result-actions">
+          <button id="copyHtml">Copy HTML</button>
+          <button id="downloadHtml">Download .html</button>
+          <button id="downloadMd">Download .md</button>
+          <button id="printBrief">Print</button>
+          <button id="newBrief">New brief</button>
+        </div>
+        <iframe class="brief-frame" id="briefFrame" sandbox="allow-same-origin"></iframe>
+      </section>
+    </div>
+
+    <div class="footer-band">
+      Built on <a href="https://anthropic.com">Claude</a> by
+      <a href="https://performancelabs.ai">PerformanceLabs.AI</a>.
+      &nbsp;&middot;&nbsp;
+      Open source on
+      <a href="https://github.com/tonybangert/Sales-Sherlock">GitHub</a>.
+    </div>
+  </main>
+  <script src="/app.js"></script>
+</body>
+</html>

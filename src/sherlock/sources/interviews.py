@@ -24,4 +24,4 @@ async def find_interviews(
         f"Include op-eds, guest posts, panel quotes, and any video or audio "
         f"recordings where they speak unscripted. Skip the company's own blog."
     )
-    return await web_search(client, topic, max_uses=4)
+    return await web_search(client, topic, max_uses=2)

@@ -25,6 +25,8 @@ $ sherlock brief --interactive
 
 See it rendered: **[sherlock-demo.vercel.app](https://sherlock-demo.vercel.app)** (a sample brief on a fictional prospect).
 
+**Try the live app: [sales-sherlock-app.vercel.app](https://sales-sherlock-app.vercel.app)** — paste a real LinkedIn profile, get a real brief in ~60 seconds. Bring your own Anthropic API key via the form-based UI.
+
 ## What's in a brief
 
 Sherlock produces nine sections, in the order an account executive actually reads them:
@@ -55,7 +57,19 @@ Pre-call research is the highest-frequency, lowest-leverage task in B2B sales. E
 
 Sherlock is the tool we wished existed: a sharp, single-purpose CLI that turns the public information you already have into a brief sharp enough to walk into a board meeting with. Confidence tags make the brief honest. The two-stage pipeline (research first, write second, synthesize psychographics last) makes it dense.
 
-It's free, open-source, and uses your own API keys.
+It's free, open-source, and uses your own API keys. Available as a Python CLI and a hosted web app.
+
+## Two ways to use Sherlock
+
+| | CLI | Web app |
+|---|---|---|
+| Where it runs | Your laptop | Vercel-hosted at [sales-sherlock-app.vercel.app](https://sales-sherlock-app.vercel.app) |
+| Setup | `pipx install sherlock-brief` + `ANTHROPIC_API_KEY` env var | Open the URL |
+| Output | `brief.md` or `brief.html` on disk | Rendered in-browser, copy/download/print |
+| Customizable prompts | Yes via `SHERLOCK_PROMPTS_DIR` | Not yet |
+| Best for | Power users, scripting, CI workflows | First-time users, one-off briefs, sharing with non-technical teammates |
+
+The CLI is the canonical interface. The web app is the same pipeline (same nine sections, same confidence tags, same source registry) wrapped in a form, with the orchestration split across short serverless functions to fit Vercel's 60-second function ceiling.
 
 ## Install
 
@@ -210,6 +224,20 @@ Common customizations:
 - **Industry-specific psychographics** — rewrite `08_psychographic.md` to surface signals around your specific category (security, fintech, healthcare).
 - **Manager-flavored hooks** — rewrite `09_hooks_and_risks.md` for executive-level conversations vs. practitioner-level conversations.
 - **Internal context block** — add a system instruction to the top of every prompt that frames who *you* sell, so the brief is generated against your specific value prop.
+
+## Web app architecture
+
+The live app at [sales-sherlock-app.vercel.app](https://sales-sherlock-app.vercel.app) is deployed from this repo. It's the CLI's pipeline, restructured into short serverless functions so each call stays under the Vercel Hobby 60-second timeout:
+
+- **`api/research.py`** — paste validation, LinkedIn parse, company website fetch, optional Apollo enrichment. No LLM. ~3 seconds.
+- **`api/search.py`** — one Anthropic-hosted `web_search` call for one source category (news, funding, jobs, LinkedIn company, or interviews). Uses `claude-haiku-4-5` so its token usage doesn't compete with the writing stage's Sonnet pool. ~10 seconds.
+- **`api/section.py`** — one prompt-per-section against the assembled dossier, plus the per-section confidence-tag validator and one-shot repair pass. ~10 seconds.
+- **`api/render.py`** — pure render, no LLM. Returns HTML or markdown.
+- **`api/health.py`** — env-var probe used by the frontend on load.
+
+The frontend (vanilla HTML + JS in `public/`) orchestrates: research → 5 batched searches (2 at a time) → 8 batched section writes (3 at a time) → sequential psychographic synthesis → render. Batching is calibrated to stay under the 30K-input-tokens-per-minute developer-tier Anthropic rate limit.
+
+Configuration: see `vercel.json` for per-function timeouts, `requirements.txt` for the deploy environment, and `pyproject.toml` for the package itself (FastAPI + Pydantic are required deps because Vercel's uv-based Python builder reads required deps from `pyproject.toml`).
 
 ## Sherlock for teams
 

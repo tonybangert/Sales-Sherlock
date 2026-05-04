@@ -10,10 +10,16 @@ Stage 2 — Writing:
   through a confidence-tag validator; if a section comes back with
   too few tags, it gets a single repair pass.
 
-  Section 8 (psychographic) runs LAST, sequentially, with the other
-  eight sections passed in as `<prior_sections>`. This is the section
-  that most differentiates a great brief from an okay one — synthesis,
-  not parallel pattern-matching.
+  Section 8 (psychographic) runs LAST among the nine numbered sections,
+  sequentially, with the other eight sections passed in as
+  `<prior_sections>`. This is the section that most differentiates a
+  great brief from an okay one — synthesis, not parallel pattern-matching.
+
+Stage 3 — Executive read:
+  After all nine sections complete, a final synthesis pass produces the
+  page-one executive read (quick stats, three priorities, entry
+  hypothesis, three high-leverage questions). It receives all nine
+  prior sections as context.
 """
 
 from __future__ import annotations
@@ -48,10 +54,12 @@ PARALLEL_SECTIONS: list[str] = [
     "hooks_and_risks",
 ]
 SEQUENTIAL_SECTIONS: list[str] = ["psychographic"]
-ALL_SECTIONS: list[str] = PARALLEL_SECTIONS + SEQUENTIAL_SECTIONS
+SYNTHESIS_SECTIONS: list[str] = ["executive_read"]
+ALL_SECTIONS: list[str] = PARALLEL_SECTIONS + SEQUENTIAL_SECTIONS + SYNTHESIS_SECTIONS
 
-# Friendly headings used when we paste prior section bodies into the
-# psychographic prompt's <prior_sections> block.
+# Friendly headings used when we paste prior section bodies into a
+# downstream prompt's <prior_sections> block. Keys cover every section
+# that can appear as prior context for another section.
 SECTION_PRIOR_HEADINGS: dict[str, str] = {
     "company_overview": "Company Overview",
     "company_history": "Company History",
@@ -61,7 +69,22 @@ SECTION_PRIOR_HEADINGS: dict[str, str] = {
     "contact_professional": "Contact Professional Profile",
     "contact_personal": "Contact Personal and Public Profile",
     "hooks_and_risks": "Conversational Hooks and Risks",
+    "psychographic": "Psychographic and Decision-Making Profile",
 }
+
+# Order in which prior sections are formatted into the executive_read
+# prior block. Mirrors the final brief reading order.
+EXECUTIVE_READ_PRIOR_ORDER: list[str] = [
+    "company_overview",
+    "company_history",
+    "investment_ownership",
+    "growth_revenue_signals",
+    "industry_competitive",
+    "contact_professional",
+    "contact_personal",
+    "psychographic",
+    "hooks_and_risks",
+]
 
 
 async def run_research_stage(
@@ -199,14 +222,20 @@ async def generate_brief(
     )
     parallel_dict = dict(parallel_results)
 
-    prior_block = _build_prior_sections_block(parallel_dict)
-
+    psy_prior_block = _build_prior_sections_block(parallel_dict, PARALLEL_SECTIONS)
     psy_id, psy_text = await _gen_one(
-        "psychographic", prior_sections=prior_block
+        "psychographic", prior_sections=psy_prior_block
     )
 
     out: dict[str, str] = dict(parallel_dict)
     out[psy_id] = psy_text
+
+    exec_prior_block = _build_prior_sections_block(out, EXECUTIVE_READ_PRIOR_ORDER)
+    exec_id, exec_text = await _gen_one(
+        "executive_read", prior_sections=exec_prior_block
+    )
+    out[exec_id] = exec_text
+
     return out
 
 
@@ -254,10 +283,17 @@ async def _repair_section(
     return repaired
 
 
-def _build_prior_sections_block(sections: dict[str, str]) -> str:
-    """Format the parallel sections for injection into the psy prompt."""
+def _build_prior_sections_block(
+    sections: dict[str, str],
+    order: list[str],
+) -> str:
+    """Format prior sections for injection into a downstream prompt.
+
+    `order` controls which section ids are included and in what sequence.
+    Sections missing from `sections` (or empty) are skipped silently.
+    """
     parts: list[str] = []
-    for sid in PARALLEL_SECTIONS:
+    for sid in order:
         body = sections.get(sid, "").strip()
         if not body:
             continue

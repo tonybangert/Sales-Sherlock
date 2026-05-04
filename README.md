@@ -239,10 +239,6 @@ The frontend (vanilla HTML + JS in `public/`) orchestrates: research → 5 batch
 
 Configuration: see `vercel.json` for per-function timeouts, `requirements.txt` for the deploy environment, and `pyproject.toml` for the package itself (FastAPI + Pydantic are required deps because Vercel's uv-based Python builder reads required deps from `pyproject.toml`).
 
-## Sherlock for teams
-
-The CLI is built for individuals. If you want to roll Sherlock out across a whole sales org — with shared prompt libraries, hosted UI, CRM integration, and your own brand on the rendered briefs — see [`docs/enterprise.md`](./docs/enterprise.md) or [book a 30-min scoping call](https://performancelabs.ai).
-
 ## Roadmap
 
 - **v0.2** — Hosted gallery (`sherlock --share` uploads to a public URL with a one-click "remove" link)
@@ -257,7 +253,3 @@ PRs welcome on bugs, prompt improvements, and new render targets. See [`CONTRIBU
 ## License
 
 MIT. Use it however you want.
-
----
-
-**Built by [PerformanceLabs.AI](https://performancelabs.ai).** We help revenue teams ship AI tools that actually move pipeline. If that sounds like a problem you have, [reach out](https://performancelabs.ai).

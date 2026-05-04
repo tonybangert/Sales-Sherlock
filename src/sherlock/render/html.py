@@ -1,9 +1,9 @@
 """HTML render — a single-file styled page that reads like a printed document.
 
-Branded for PerformanceLabs.AI: deep navy header band with the "Sales
-Sherlock" wordmark and an inline SVG magnifying glass, warm cream paper
-body, gold accent rule. Confidence-tag pills (green/amber/slate) stay
-semantic but are tuned to read on the cream background.
+Deep navy header band with the "Sales Sherlock" wordmark and an inline SVG
+magnifying glass, warm cream paper body, gold accent rule. Confidence-tag
+pills (green/amber/slate) stay semantic but are tuned to read on the cream
+background.
 
 Override the palette by editing the CSS variables at the top of the
 template. Five vars cover the brand surface; the semantic pill colors
@@ -317,7 +317,7 @@ _HTML_TEMPLATE = """<!DOCTYPE html>
         <span class="word">Sales Sherlock</span>
         {magnifier}
       </h1>
-      <div class="brand-tagline">A PerformanceLabs.AI pre-call research tool</div>
+      <div class="brand-tagline">Pre-call research, in 60 seconds</div>
     </div>
 
     <div class="doc">
@@ -336,11 +336,7 @@ _HTML_TEMPLATE = """<!DOCTYPE html>
     </div>
 
     <div class="footer-band">
-      Built on <a href="https://anthropic.com">Claude</a> by
-      <a href="https://performancelabs.ai">PerformanceLabs.AI</a>.
-      &nbsp;&middot;&nbsp;
-      Want this rolled out across your revenue stack?
-      <a href="https://performancelabs.ai">Let's talk</a>.
+      Built on <a href="https://anthropic.com">Claude</a>.
     </div>
   </main>
 </body>

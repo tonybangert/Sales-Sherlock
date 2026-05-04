@@ -23,6 +23,7 @@ PROMPT_FILES: dict[str, str] = {
     "contact_personal": "07_contact_personal.md",
     "psychographic": "08_psychographic.md",
     "hooks_and_risks": "09_hooks_and_risks.md",
+    "executive_read": "00_executive_read.md",
 }
 
 _BUNDLED_DIR = Path(__file__).parent

@@ -1,13 +1,12 @@
-"""HTML render — a single-file styled page that reads like a printed document.
+"""HTML render — a designed two-page editorial brief.
 
-Deep navy header band with the "Sales Sherlock" wordmark and an inline SVG
-magnifying glass, warm cream paper body, gold accent rule. Confidence-tag
-pills (green/amber/slate) stay semantic but are tuned to read on the cream
-background.
+On screen: long-scroll, single column, paper-feel. On print/PDF: snaps
+to a 2-3 page layout where the Executive Read anchors page one and the
+nine numbered sections flow across pages 2-3 in two columns.
 
-Override the palette by editing the CSS variables at the top of the
-template. Five vars cover the brand surface; the semantic pill colors
-sit underneath.
+Brand palette is defined as CSS variables at the top of the template.
+Five vars cover the brand surface; semantic confidence-tag colors sit
+underneath.
 """
 
 from __future__ import annotations
@@ -17,7 +16,8 @@ import re
 from datetime import datetime
 
 from sherlock.dossier import Dossier
-from sherlock.render.markdown import SECTION_HEADINGS, SECTION_ORDER
+from sherlock.render.executive import ExecutiveRead, parse_executive_read
+from sherlock.render.markdown import SECTION_HEADINGS
 
 try:
     from markdown_it import MarkdownIt
@@ -57,9 +57,20 @@ def _stylize_tags(html_body: str) -> str:
     return _TAG_RE.sub(_replace, html_body)
 
 
-# Inline SVG magnifying glass. Sized via CSS to match the wordmark cap
-# height. Slight rotation for visual interest. Lens has a subtle
-# highlight crescent so it reads as a polished glass element.
+# Sections that flow into the two-column dossier on pages 2-3.
+_DOSSIER_SECTION_ORDER: list[str] = [
+    "company_overview",
+    "company_history",
+    "investment_ownership",
+    "growth_revenue_signals",
+    "industry_competitive",
+    "contact_professional",
+    "contact_personal",
+    "psychographic",
+    "hooks_and_risks",
+]
+
+
 _MAGNIFIER_SVG = """\
 <svg class="magnifier" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
   <g transform="rotate(-22 32 32)">
@@ -84,16 +95,17 @@ _HTML_TEMPLATE = """<!DOCTYPE html>
 <meta charset="utf-8">
 <title>Sales Sherlock - Pre-call brief - {name} @ {company}</title>
 <style>
-  /* ===== Brand palette (override hex codes here to match your real palette) ===== */
+  /* ===== Brand palette ===== */
   :root {{
-    --brand:        #0B1F3A;   /* Deep navy header band */
-    --brand-2:      #C9A45A;   /* Warm gold accent */
-    --ink:          #1A1A1A;   /* Body text */
-    --muted:        #6B6B6B;   /* Meta / muted text */
-    --paper:        #F8F5EE;   /* Warm off-white paper */
-    --paper-edge:   #ECE6D5;   /* Slightly darker rim */
-    --page:         #2A2520;   /* Desk background behind the paper */
-    --rule:         #DCD5C6;   /* Paper rule line */
+    --brand:        #0B1F3A;
+    --brand-2:      #C9A45A;
+    --ink:          #1A1A1A;
+    --muted:        #6B6B6B;
+    --paper:        #F8F5EE;
+    --paper-edge:   #ECE6D5;
+    --paper-inset:  #FFFDF7;
+    --page:         #2A2520;
+    --rule:         #DCD5C6;
     --accent-soft:  rgba(201,164,90,0.18);
 
     --tag-verified-bg:  #E5F0E0;
@@ -102,16 +114,20 @@ _HTML_TEMPLATE = """<!DOCTYPE html>
     --tag-reported-fg:  #7A5314;
     --tag-inferred-bg:  #E5DECF;
     --tag-inferred-fg:  #4A4536;
+
+    --serif: ui-serif, "Iowan Old Style", "Apple Garamond", Baskerville,
+             "Times New Roman", Georgia, serif;
+    --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Inter, system-ui,
+            sans-serif;
   }}
 
   * {{ box-sizing: border-box; }}
-
   html, body {{ margin: 0; padding: 0; }}
 
   body {{
     background: var(--page);
     color: var(--ink);
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Inter, system-ui, sans-serif;
+    font-family: var(--sans);
     line-height: 1.55;
     padding: 48px 16px 64px;
   }}
@@ -129,11 +145,11 @@ _HTML_TEMPLATE = """<!DOCTYPE html>
     overflow: hidden;
   }}
 
-  /* ===== Brand header band ===== */
+  /* ===== Brand band ===== */
   .brand-band {{
     background: linear-gradient(180deg, var(--brand) 0%, #08172B 100%);
     color: #F1ECDB;
-    padding: 28px 56px 22px;
+    padding: 26px 56px 20px;
     border-bottom: 2px solid var(--brand-2);
     position: relative;
   }}
@@ -152,9 +168,8 @@ _HTML_TEMPLATE = """<!DOCTYPE html>
     display: flex;
     align-items: center;
     gap: 14px;
-    font-family: ui-serif, "Iowan Old Style", "Apple Garamond", Baskerville,
-                 "Times New Roman", Georgia, serif;
-    font-size: 34px;
+    font-family: var(--serif);
+    font-size: 32px;
     font-weight: 600;
     letter-spacing: 0.01em;
     line-height: 1;
@@ -167,66 +182,151 @@ _HTML_TEMPLATE = """<!DOCTYPE html>
     color: transparent;
   }}
   .magnifier {{
-    width: 38px;
-    height: 38px;
+    width: 36px;
+    height: 36px;
     flex-shrink: 0;
     filter: drop-shadow(0 1px 1px rgba(0,0,0,0.45));
   }}
-
   .brand-tagline {{
     margin-top: 6px;
     color: rgba(241, 236, 219, 0.65);
-    font-size: 12px;
+    font-size: 11.5px;
     letter-spacing: 0.14em;
     text-transform: uppercase;
     font-weight: 500;
   }}
 
-  /* ===== Document body ===== */
-  .doc {{
-    padding: 38px 56px 48px;
+  /* ===== Article ===== */
+  .brief {{
+    padding: 36px 56px 44px;
   }}
 
-  .doc-title {{
-    font-family: ui-serif, "Iowan Old Style", "Apple Garamond", Baskerville,
-                 Georgia, serif;
-    font-size: 26px;
-    font-weight: 700;
-    letter-spacing: -0.005em;
-    color: var(--ink);
-    margin: 0 0 18px;
-  }}
-
-  .header-meta {{
-    display: grid;
-    grid-template-columns: max-content 1fr;
-    gap: 4px 16px;
-    font-size: 14px;
-    color: var(--ink);
+  /* ===== Masthead ===== */
+  .brief-masthead {{
+    margin: 0 0 24px;
     padding-bottom: 18px;
     border-bottom: 1px solid var(--rule);
   }}
-  .header-meta dt {{
+  .company-name {{
+    font-family: var(--serif);
+    font-size: 30px;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    color: var(--ink);
+    margin: 0 0 4px;
+    line-height: 1.15;
+  }}
+  .meta-line {{
+    font-size: 13px;
     color: var(--muted);
-    font-weight: 600;
-    font-size: 12px;
+    letter-spacing: 0.01em;
+    margin: 0;
+  }}
+  .meta-line .meta-sep {{
+    color: var(--brand-2);
+    margin: 0 8px;
+    font-weight: 700;
+  }}
+
+  /* ===== Executive Read card ===== */
+  .executive-read {{
+    margin: 0 0 32px;
+  }}
+  .exec-eyebrow {{
+    font-family: var(--sans);
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.18em;
+    color: var(--brand-2);
+    margin: 0 0 14px;
+  }}
+
+  .stat-strip {{
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+    list-style: none;
+    padding: 0;
+    margin: 0 0 22px;
+  }}
+  .stat {{
+    border: 1px solid var(--rule);
+    border-radius: 3px;
+    padding: 9px 12px 10px;
+    background: var(--paper-inset);
+  }}
+  .stat-label {{
+    display: block;
+    font-size: 10.5px;
+    font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 0.08em;
-    padding-top: 3px;
+    color: var(--muted);
+    margin-bottom: 3px;
   }}
-  .header-meta dd {{ margin: 0; }}
+  .stat-value {{
+    display: block;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--ink);
+    line-height: 1.35;
+  }}
+  @media (max-width: 640px) {{
+    .stat-strip {{ grid-template-columns: repeat(2, 1fr); }}
+  }}
 
-  h2 {{
-    font-family: ui-serif, "Iowan Old Style", Georgia, serif;
+  .exec-block {{
+    margin-bottom: 16px;
+  }}
+  .exec-block h3 {{
+    font-family: var(--sans);
+    font-size: 11.5px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--brand);
+    margin: 0 0 6px;
+  }}
+  .exec-block ol {{
+    margin: 0;
+    padding-left: 22px;
+    font-size: 14px;
+  }}
+  .exec-block ol li {{
+    margin-bottom: 4px;
+  }}
+
+  .exec-hypothesis p {{
+    font-family: var(--serif);
+    font-size: 16px;
+    font-style: italic;
+    line-height: 1.5;
+    color: var(--ink);
+    margin: 0;
+    padding: 14px 0 12px;
+    border-top: 1px solid var(--brand-2);
+    border-bottom: 1px solid var(--rule);
+  }}
+
+  /* ===== Dossier (pages 2-3) ===== */
+  .dossier {{
+    margin-top: 8px;
+  }}
+  .brief-section {{
+    margin-bottom: 18px;
+  }}
+  .brief-section h2 {{
+    font-family: var(--serif);
     font-size: 16px;
     font-weight: 700;
     color: var(--brand);
-    margin: 36px 0 10px;
-    padding-bottom: 6px;
+    margin: 12px 0 8px;
+    padding-bottom: 5px;
     border-bottom: 1px solid var(--rule);
     letter-spacing: 0.005em;
   }}
-  h2::before {{
+  .brief-section h2::before {{
     content: "";
     display: inline-block;
     width: 6px;
@@ -234,26 +334,37 @@ _HTML_TEMPLATE = """<!DOCTYPE html>
     background: var(--brand-2);
     border-radius: 50%;
     vertical-align: 4px;
-    margin-right: 10px;
+    margin-right: 9px;
   }}
-
-  h3, .doc strong {{ color: var(--ink); }}
-  h3 {{
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Inter, sans-serif;
-    font-size: 14px;
+  .brief-section h3 {{
+    font-family: var(--sans);
+    font-size: 12px;
     font-weight: 700;
-    margin: 18px 0 6px;
+    margin: 14px 0 4px;
     text-transform: uppercase;
     letter-spacing: 0.06em;
     color: var(--brand);
   }}
+  .brief-section p,
+  .brief-section li {{
+    font-size: 13.5px;
+    line-height: 1.55;
+  }}
+  .brief-section p {{ margin: 0 0 10px; }}
+  .brief-section ul,
+  .brief-section ol {{
+    padding-left: 20px;
+    margin: 0 0 12px;
+  }}
+  .brief-section li {{ margin-bottom: 4px; }}
+  .brief-section strong {{ color: var(--ink); }}
 
-  p, li {{ font-size: 14.5px; }}
-  p {{ margin: 0 0 12px; }}
-  ul, ol {{ padding-left: 22px; margin: 0 0 14px; }}
-  li {{ margin-bottom: 6px; }}
-
-  a {{ color: var(--brand); text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 2px; }}
+  a {{
+    color: var(--brand);
+    text-decoration: underline;
+    text-decoration-thickness: 1px;
+    text-underline-offset: 2px;
+  }}
 
   /* ===== Confidence-tag pills ===== */
   .tag {{
@@ -272,25 +383,43 @@ _HTML_TEMPLATE = """<!DOCTYPE html>
   .tag-reported {{ background: var(--tag-reported-bg); color: var(--tag-reported-fg); border-color: rgba(122,83,20,0.22); }}
   .tag-inferred {{ background: var(--tag-inferred-bg); color: var(--tag-inferred-fg); border-color: rgba(74,69,54,0.18); }}
 
-  /* ===== Sources appendix ===== */
+  /* ===== Sources ===== */
+  .sources {{
+    margin-top: 28px;
+    padding-top: 16px;
+    border-top: 1px solid var(--rule);
+  }}
+  .sources h2 {{
+    font-family: var(--serif);
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--brand);
+    margin: 0 0 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+  }}
   .sources-list {{
     list-style: none;
     padding: 0;
     margin: 0;
-    font-size: 12.5px;
+    font-size: 11.5px;
     color: var(--muted);
   }}
-  .sources-list li {{ padding: 4px 0; border-bottom: 1px dotted var(--rule); }}
+  .sources-list li {{
+    padding: 4px 0;
+    border-bottom: 1px dotted var(--rule);
+  }}
   .sources-list li:last-child {{ border-bottom: 0; }}
   .sources-list a {{ color: var(--brand); }}
+  .source-kind {{ color: var(--brand-2); font-weight: 600; }}
 
   /* ===== Footer band ===== */
   .footer-band {{
-    margin-top: 42px;
-    padding: 22px 56px;
+    margin-top: 0;
+    padding: 18px 56px;
     background: var(--brand);
     color: rgba(241, 236, 219, 0.78);
-    font-size: 12.5px;
+    font-size: 12px;
     letter-spacing: 0.02em;
     text-align: center;
     border-top: 2px solid var(--brand-2);
@@ -302,42 +431,135 @@ _HTML_TEMPLATE = """<!DOCTYPE html>
   }}
   .footer-band a:hover {{ text-decoration: underline; }}
 
-  /* ===== Print ===== */
+  /* ===== Print: snap to 2-3 pages ===== */
   @media print {{
-    body {{ background: #fff; padding: 0; }}
-    .paper {{ box-shadow: none; border: none; max-width: none; }}
-    .brand-band, .footer-band {{ -webkit-print-color-adjust: exact; print-color-adjust: exact; }}
+    @page {{
+      size: letter;
+      margin: 0.55in 0.6in;
+    }}
+
+    body {{
+      background: #fff;
+      padding: 0;
+      font-size: 11pt;
+    }}
+    .paper {{
+      box-shadow: none;
+      border: none;
+      border-radius: 0;
+      max-width: none;
+      overflow: visible;
+    }}
+    .brand-band, .footer-band {{
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
+    }}
+    .brand-band {{
+      padding: 18px 0 14px;
+    }}
+    .brief {{
+      padding: 18px 0 0;
+    }}
+    .brief-masthead {{
+      margin: 0 0 14px;
+      padding-bottom: 10px;
+    }}
+    .company-name {{ font-size: 22pt; }}
+    .meta-line {{ font-size: 9.5pt; }}
+
+    .exec-eyebrow {{ margin-bottom: 8px; }}
+    .stat-strip {{ gap: 6px; margin-bottom: 14px; }}
+    .stat {{ padding: 6px 9px 7px; }}
+    .stat-label {{ font-size: 7.5pt; }}
+    .stat-value {{ font-size: 9pt; }}
+    .exec-block {{ margin-bottom: 10px; }}
+    .exec-block h3 {{ font-size: 8pt; }}
+    .exec-block ol {{ font-size: 10pt; }}
+    .exec-hypothesis p {{ font-size: 11.5pt; padding: 10px 0 9px; }}
+
+    /* Page-1 break: dossier and sources start on new pages when the
+       executive read is present. Class added by the renderer only when
+       there is a non-empty executive_read to anchor page 1. */
+    .dossier--page2 {{
+      break-before: page;
+      page-break-before: always;
+    }}
+
+    /* Two-column flow for the nine sections in print only. */
+    .dossier-grid {{
+      column-count: 2;
+      column-gap: 0.32in;
+      column-fill: balance;
+    }}
+    .brief-section {{
+      break-inside: avoid;
+      page-break-inside: avoid;
+      margin-bottom: 10px;
+    }}
+    .brief-section h2 {{
+      font-size: 10.5pt;
+      margin: 4px 0 5px;
+      padding-bottom: 3px;
+    }}
+    .brief-section h3 {{
+      font-size: 8pt;
+      margin: 8px 0 3px;
+    }}
+    .brief-section p,
+    .brief-section li {{ font-size: 9.5pt; line-height: 1.4; }}
+    .brief-section p {{ margin: 0 0 6px; }}
+    .brief-section ul,
+    .brief-section ol {{ margin: 0 0 7px; padding-left: 16px; }}
+
+    .tag {{ font-size: 7.5pt; padding: 0 6px; }}
+
+    .sources {{
+      break-before: page;
+      page-break-before: always;
+      margin-top: 0;
+      padding-top: 0;
+      border-top: 0;
+    }}
+    .sources h2 {{ font-size: 10pt; }}
+    .sources-list {{ font-size: 8.5pt; }}
+
+    .footer-band {{
+      padding: 10px 0;
+      font-size: 8pt;
+    }}
   }}
 </style>
 </head>
 <body>
   <main class="paper">
-    <div class="brand-band">
+    <header class="brand-band">
       <h1 class="wordmark">
         <span class="word">Sales Sherlock</span>
         {magnifier}
       </h1>
       <div class="brand-tagline">Pre-call research, in 60 seconds</div>
-    </div>
+    </header>
 
-    <div class="doc">
-      <h2 class="doc-title">Pre-call brief</h2>
-      <dl class="header-meta">
-        <dt>Company</dt><dd>{company}</dd>
-        <dt>Contact</dt><dd>{name}{title_suffix}</dd>
-        {context_row}
-        {positioning_row}
-        <dt>Prepared</dt><dd>{when}</dd>
-      </dl>
+    <article class="brief">
+      <header class="brief-masthead">
+        <h2 class="company-name">{company}</h2>
+        <p class="meta-line">{meta_line}</p>
+      </header>
 
-      {body}
+      {executive_read_html}
 
-      {sources}
-    </div>
+      <section class="{dossier_class}">
+        <div class="dossier-grid">
+          {dossier_html}
+        </div>
+      </section>
 
-    <div class="footer-band">
+      {sources_html}
+    </article>
+
+    <footer class="footer-band">
       Built on <a href="https://anthropic.com">Claude</a>.
-    </div>
+    </footer>
   </main>
 </body>
 </html>
@@ -345,67 +567,144 @@ _HTML_TEMPLATE = """<!DOCTYPE html>
 
 
 def render_html(sections: dict[str, str], dossier: Dossier) -> str:
-    name = _html.escape(dossier.linkedin.name or "(unknown)")
+    name = dossier.linkedin.name or "(unknown)"
     title = dossier.linkedin.headline or dossier.linkedin.current_role
-    title_suffix = f", {_html.escape(title)}" if title else ""
-    company_label = _html.escape(dossier.company.title or dossier.company.url)
+    company_label = dossier.company.title or dossier.company.url
     when = datetime.now().strftime("%B %d, %Y")
 
-    context_row = (
-        f"<dt>Meeting</dt><dd>{_html.escape(dossier.context)}</dd>"
-        if dossier.context
-        else ""
-    )
-    positioning_row = (
-        f"<dt>Positioning</dt><dd>{_html.escape(dossier.positioning)}</dd>"
-        if dossier.positioning
-        else ""
+    meta_line = _build_meta_line(name, title, dossier.context, when)
+
+    exec_read = parse_executive_read(sections.get("executive_read", ""))
+    executive_read_html = _render_executive_read(exec_read)
+    dossier_class = (
+        "dossier dossier--page2" if not exec_read.is_empty else "dossier"
     )
 
-    body_parts: list[str] = []
-    for section_id in SECTION_ORDER:
-        body = sections.get(section_id)
-        if not body:
-            continue
-        body_parts.append(
-            f"<h2>{_html.escape(SECTION_HEADINGS[section_id])}</h2>"
-        )
-        body_parts.append(_stylize_tags(_md_to_html(body.strip())))
-
-    sources_html = ""
-    if dossier.sources:
-        rows: list[str] = []
-        for s in dossier.sources:
-            label = (
-                f"<strong>{_html.escape(s.id)}</strong> "
-                f"<span style=\"color:var(--brand-2);font-weight:600;\">[{_html.escape(s.kind)}]</span> "
-                f"{_html.escape(s.title)}"
-            )
-            if s.url:
-                label += (
-                    f' &nbsp;<a href="{_html.escape(s.url)}">'
-                    f'{_html.escape(s.url)}</a>'
-                )
-            rows.append(f"<li>{label}</li>")
-        rows.append(
-            "<li><strong>LinkedIn paste</strong> "
-            "<span style=\"color:var(--brand-2);font-weight:600;\">[linkedin_paste]</span> "
-            "Pasted by user (not retransmitted)</li>"
-        )
-        sources_html = (
-            "<h2>Sources</h2><ul class=\"sources-list\">"
-            + "".join(rows)
-            + "</ul>"
-        )
+    dossier_html = _render_dossier_sections(sections)
+    sources_html = _render_sources(dossier)
 
     return _HTML_TEMPLATE.format(
         magnifier=_MAGNIFIER_SVG,
-        name=name,
-        title_suffix=title_suffix,
-        company=company_label,
-        context_row=context_row,
-        positioning_row=positioning_row,
-        when=when,
-        body="\n".join(body_parts),
-        sources=sources_html,
+        name=_html.escape(name),
+        company=_html.escape(company_label),
+        meta_line=meta_line,
+        executive_read_html=executive_read_html,
+        dossier_class=dossier_class,
+        dossier_html=dossier_html,
+        sources_html=sources_html,
+    )
+
+
+def _build_meta_line(
+    name: str,
+    title: str | None,
+    context: str | None,
+    when: str,
+) -> str:
+    """Single-line meta string under the company name."""
+    parts: list[str] = []
+    contact = _html.escape(name)
+    if title:
+        contact += f", {_html.escape(title)}"
+    parts.append(contact)
+    if context:
+        parts.append(_html.escape(context))
+    parts.append(f"Prepared {_html.escape(when)}")
+    sep = '<span class="meta-sep">&middot;</span>'
+    return sep.join(parts)
+
+
+def _render_executive_read(er: ExecutiveRead) -> str:
+    """Render the page-one Executive Read card. Empty string if no data."""
+    if er.is_empty:
+        return ""
+
+    parts: list[str] = ['<section class="executive-read">']
+    parts.append('<div class="exec-eyebrow">Executive Read</div>')
+
+    if er.quick_stats:
+        parts.append('<ul class="stat-strip">')
+        for stat in er.quick_stats:
+            value_html = _stylize_tags(_html.escape(stat.value))
+            parts.append(
+                '<li class="stat">'
+                f'<span class="stat-label">{_html.escape(stat.label)}</span>'
+                f'<span class="stat-value">{value_html}</span>'
+                '</li>'
+            )
+        parts.append('</ul>')
+
+    if er.priorities:
+        parts.append('<div class="exec-block exec-priorities">')
+        parts.append('<h3>Three likely priorities</h3>')
+        parts.append('<ol>')
+        for item in er.priorities:
+            parts.append(f'<li>{_stylize_tags(_html.escape(item))}</li>')
+        parts.append('</ol>')
+        parts.append('</div>')
+
+    if er.hypothesis:
+        parts.append('<div class="exec-block exec-hypothesis">')
+        parts.append('<h3>Entry hypothesis</h3>')
+        parts.append(f'<p>{_stylize_tags(_html.escape(er.hypothesis))}</p>')
+        parts.append('</div>')
+
+    if er.questions:
+        parts.append('<div class="exec-block exec-questions">')
+        parts.append('<h3>Three high-leverage questions</h3>')
+        parts.append('<ol>')
+        for item in er.questions:
+            parts.append(f'<li>{_html.escape(item)}</li>')
+        parts.append('</ol>')
+        parts.append('</div>')
+
+    parts.append('</section>')
+    return "\n".join(parts)
+
+
+def _render_dossier_sections(sections: dict[str, str]) -> str:
+    """Render the nine numbered sections, each in its own break-safe article."""
+    parts: list[str] = []
+    for section_id in _DOSSIER_SECTION_ORDER:
+        body = sections.get(section_id)
+        if not body:
+            continue
+        heading = SECTION_HEADINGS.get(section_id, section_id)
+        body_html = _stylize_tags(_md_to_html(body.strip()))
+        parts.append(
+            f'<article class="brief-section">'
+            f'<h2>{_html.escape(heading)}</h2>'
+            f'{body_html}'
+            f'</article>'
+        )
+    return "\n".join(parts)
+
+
+def _render_sources(dossier: Dossier) -> str:
+    if not dossier.sources:
+        return ""
+    rows: list[str] = []
+    for s in dossier.sources:
+        label = (
+            f"<strong>{_html.escape(s.id)}</strong> "
+            f'<span class="source-kind">[{_html.escape(s.kind)}]</span> '
+            f"{_html.escape(s.title)}"
+        )
+        if s.url:
+            label += (
+                f' &nbsp;<a href="{_html.escape(s.url)}">'
+                f'{_html.escape(s.url)}</a>'
+            )
+        rows.append(f"<li>{label}</li>")
+    rows.append(
+        '<li><strong>LinkedIn paste</strong> '
+        '<span class="source-kind">[linkedin_paste]</span> '
+        'Pasted by user (not retransmitted)</li>'
+    )
+    return (
+        '<section class="sources">'
+        '<h2>Sources</h2>'
+        '<ul class="sources-list">'
+        + "".join(rows)
+        + '</ul></section>'
     )

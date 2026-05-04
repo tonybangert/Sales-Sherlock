@@ -11,6 +11,7 @@ from datetime import datetime
 from sherlock.dossier import Dossier
 
 SECTION_HEADINGS: dict[str, str] = {
+    "executive_read": "Executive Read",
     "company_overview": "1. Company Overview",
     "company_history": "2. Company History",
     "investment_ownership": "3. Investment and Ownership",
@@ -22,6 +23,7 @@ SECTION_HEADINGS: dict[str, str] = {
     "hooks_and_risks": "9. Conversational Hooks and Risks",
 }
 
+# executive_read leads the brief; the nine numbered sections follow.
 SECTION_ORDER: list[str] = list(SECTION_HEADINGS.keys())
 
 
